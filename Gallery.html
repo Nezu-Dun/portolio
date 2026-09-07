@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Gallery Snippet Builder (local tool)</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; background-color: #a9d9c4; }
+  h1 { font-size: 1.4rem; }
+  .dropzone {
+    border: 2px dashed #999;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    background-color: #eef2ef;
+  }
+  .dropzone.dragover { border-color: #333; color: #333; background: #e4e9e5; }
+  input[type="text"], input[type="url"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    box-sizing: border-box;
+    background-color: #eef2ef;
+    border: 1px solid #999;
+    border-radius: 4px;
+  }
+  label { display: block; margin-top: 1rem; font-weight: bold; }
+  button { margin-top: 1.5rem; padding: 0.6rem 1.2rem; font-weight: bold; cursor: pointer; }
+  textarea {
+    width: 100%;
+    height: 140px;
+    margin-top: 1rem;
+    font-family: monospace;
+    padding: 0.5rem;
+    background-color: #eef2ef;
+    border: 1px solid #999;
+    border-radius: 4px;
+  }
+  .preview { max-width: 200px; margin-top: 1rem; border-radius: 4px; display: none; }
+</style>
+</head>
+<body>
+
+  <h1>Gallery Snippet Builder</h1>
+  <p>Drop an image OR paste an Imgur URL below, fill in the details, and copy the generated HTML into <code>index.html</code>.</p>
+
+  <div class="dropzone" id="dropzone">Drag &amp; drop an image here (just to preview it — doesn't upload anywhere)</div>
+  <img id="preview" class="preview" />
+
+  <label for="imgUrl">Image URL (Imgur direct link, e.g. https://i.imgur.com/XXXXXXX.jpg)</label>
+  <input type="url" id="imgUrl" placeholder="https://i.imgur.com/XXXXXXX.jpg" />
+
+  <label for="altText">Alt text (short description)</label>
+  <input type="text" id="altText" placeholder="A watercolor painting of a mountain range" />
+
+  <label for="caption">Caption / Title</label>
+  <input type="text" id="caption" placeholder="Mountain Study" />
+
+  <button id="generateBtn">Generate HTML</button>
+
+  <textarea id="output" readonly placeholder="Your <figure> snippet will appear here"></textarea>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const preview = document.getElementById('preview');
+  const imgUrlInput = document.getElementById('imgUrl');
+
+  // Drag & drop just previews locally — it can't upload anywhere,
+  // since this is a static site with no server to receive files.
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        dropzone.textContent = `Loaded: ${file.name} (remember: you still need to upload this to Imgur and paste its URL below — this preview is just local)`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // If a URL is pasted instead, preview that
+  imgUrlInput.addEventListener('input', () => {
+    if (imgUrlInput.value) {
+      preview.src = imgUrlInput.value;
+      preview.style.display = 'block';
+    }
+  });
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    const url = imgUrlInput.value.trim() || 'https://i.imgur.com/XXXXXXX.jpg';
+    const alt = document.getElementById('altText').value.trim() || 'Description of piece';
+    const caption = document.getElementById('caption').value.trim() || 'Piece Title';
+
+    const snippet =
+`<figure class="art-piece">
+  <img src="${url}" alt="${alt}" />
+  <figcaption>${caption}</figcaption>
+</figure>`;
+
+    document.getElementById('output').value = snippet;
+  });
+</script>
+
+</body>
+</html>
